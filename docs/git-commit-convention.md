@@ -54,19 +54,21 @@ findex/
  ├── .githooks/
  │    └── commit-msg
  ├── scripts/
- │    └── setup-git.sh
+ │    ├── setup-git.sh
+ │    └── setup-git.bat
  └── docs/
       └── git-commit-template.md
 ```
 
 각 파일의 역할은 다음과 같습니다.
 
-| 파일                            | 역할                             |
-| ----------------------------- | ------------------------------ |
-| `.gitmessage.txt`             | 커밋 메시지 작성 시 기본으로 표시될 템플릿       |
-| `.githooks/commit-msg`        | 커밋 메시지 형식을 검사하는 Git hook       |
-| `scripts/setup-git.sh`        | 팀원이 한 번에 Git 설정을 적용할 수 있는 스크립트 |
-| `docs/git-commit-template.md` | 설정 방법과 사용법을 정리한 문서             |
+| 파일                            | 역할                                            |
+| ----------------------------- | --------------------------------------------- |
+| `.gitmessage.txt`             | 커밋 메시지 작성 시 기본으로 표시될 템플릿                      |
+| `.githooks/commit-msg`        | 커밋 메시지 형식을 검사하는 Git hook                      |
+| `scripts/setup-git.sh`        | Mac/Linux/Git Bash 환경에서 Git 설정을 적용하는 스크립트     |
+| `scripts/setup-git.bat`       | Windows CMD/PowerShell 환경에서 Git 설정을 적용하는 스크립트 |
+| `docs/git-commit-template.md` | 설정 방법과 사용법을 정리한 문서                            |
 
 ---
 
@@ -213,7 +215,16 @@ git config --local commit.template .gitmessage.txt
 
 ## 9. 팀원용 설정 스크립트 작성
 
-팀원들이 매번 명령어를 직접 입력하지 않아도 되도록 `scripts/setup-git.sh` 파일을 생성합니다.
+팀원들이 매번 명령어를 직접 입력하지 않아도 되도록 운영체제별 설정 스크립트를 제공합니다.
+
+* Mac/Linux/Git Bash: `scripts/setup-git.sh`
+* Windows CMD/PowerShell: `scripts/setup-git.bat`
+
+---
+
+### 9-1. Mac/Linux/Git Bash용 설정 스크립트
+
+`scripts/setup-git.sh` 파일을 생성합니다.
 
 ```bash
 mkdir -p scripts
@@ -235,11 +246,46 @@ echo "Git commit template and hooks have been configured."
 echo "Commit message example: Add: 지수 정보 생성 API 추가"
 ```
 
-팀원은 프로젝트를 clone 받은 후 아래 명령어를 한 번만 실행하면 됩니다.
+Mac/Linux 또는 Git Bash 사용자는 프로젝트를 clone 받은 후 아래 명령어를 한 번만 실행하면 됩니다.
 
 ```bash
 ./scripts/setup-git.sh
 ```
+
+실행 권한 문제가 발생하면 아래처럼 실행합니다.
+
+```bash
+sh scripts/setup-git.sh
+```
+
+---
+
+### 9-2. Windows CMD/PowerShell용 설정 스크립트
+
+Windows 환경에서는 `.sh` 파일이 기본 CMD 또는 PowerShell에서 바로 실행되지 않을 수 있습니다.
+따라서 Windows 사용자를 위해 `scripts/setup-git.bat` 파일을 추가합니다.
+
+`scripts/setup-git.bat` 파일에 아래 내용을 작성합니다.
+
+```bat
+@echo off
+
+git config --local commit.template .gitmessage.txt
+git config --local core.hooksPath .githooks
+
+echo Git commit template and hooks have been configured.
+echo Commit message example: Add: 지수 정보 생성 API 추가
+
+pause
+```
+
+Windows 사용자는 프로젝트를 clone 받은 후 PowerShell 또는 CMD에서 아래 명령어를 실행합니다.
+
+```powershell
+.\scripts\setup-git.bat
+```
+
+또는 파일 탐색기에서 `scripts/setup-git.bat` 파일을 더블 클릭해도 됩니다.
 
 ---
 
@@ -258,7 +304,7 @@ mkdir -p .githooks
 touch .githooks/commit-msg
 chmod +x .githooks/commit-msg
 
-# 4. 설정 스크립트 생성
+# 4. Mac/Linux/Git Bash용 설정 스크립트 생성
 mkdir -p scripts
 touch scripts/setup-git.sh
 chmod +x scripts/setup-git.sh
@@ -268,10 +314,24 @@ git config --local commit.template .gitmessage.txt
 git config --local core.hooksPath .githooks
 ```
 
+Windows 사용자를 위해 `scripts/setup-git.bat` 파일도 함께 생성합니다.
+
+```bat
+@echo off
+
+git config --local commit.template .gitmessage.txt
+git config --local core.hooksPath .githooks
+
+echo Git commit template and hooks have been configured.
+echo Commit message example: Add: 지수 정보 생성 API 추가
+
+pause
+```
+
 이후 관련 파일들을 커밋합니다.
 
 ```bash
-git add .gitmessage.txt .githooks/commit-msg scripts/setup-git.sh
+git add .gitmessage.txt .githooks/commit-msg scripts/setup-git.sh scripts/setup-git.bat
 git commit
 ```
 
@@ -285,10 +345,31 @@ Add: Git 커밋 컨벤션 설정 추가
 
 ## 11. 팀원이 프로젝트를 받은 후 해야 할 일
 
-팀원은 프로젝트를 clone 받은 후 아래 명령어를 한 번 실행합니다.
+팀원은 프로젝트를 clone 받은 후 본인 운영체제에 맞는 설정 스크립트를 한 번 실행합니다.
+
+### Mac/Linux/Git Bash
 
 ```bash
 ./scripts/setup-git.sh
+```
+
+실행 권한 문제로 실행되지 않으면 아래 명령어를 사용합니다.
+
+```bash
+sh scripts/setup-git.sh
+```
+
+### Windows CMD/PowerShell
+
+```powershell
+.\scripts\setup-git.bat
+```
+
+또는 아래 명령어를 직접 실행해도 됩니다.
+
+```powershell
+git config --local commit.template .gitmessage.txt
+git config --local core.hooksPath .githooks
 ```
 
 정상 적용 여부는 아래 명령어로 확인할 수 있습니다.
@@ -367,6 +448,42 @@ IntelliJ 콘솔에 보이는 아래 문구는 Git 실행 옵션이 출력된 것
 
 ---
 
+### Windows에서 IntelliJ를 사용하는 경우
+
+Windows 환경에서 IntelliJ를 사용하는 경우에도 `commit-msg` hook은 동일하게 동작합니다.
+다만 처음 프로젝트를 clone 받은 후 아래 설정이 되어 있어야 합니다.
+
+```powershell
+.\scripts\setup-git.bat
+```
+
+또는 직접 아래 명령어를 실행합니다.
+
+```powershell
+git config --local commit.template .gitmessage.txt
+git config --local core.hooksPath .githooks
+```
+
+Windows에서 `.sh` 파일을 PowerShell이나 CMD에서 실행하면 동작하지 않을 수 있습니다.
+
+```powershell
+./scripts/setup-git.sh
+```
+
+위 명령어가 실행되지 않는 경우 아래 중 하나를 사용합니다.
+
+```powershell
+.\scripts\setup-git.bat
+```
+
+또는 Git Bash에서 실행합니다.
+
+```bash
+sh scripts/setup-git.sh
+```
+
+---
+
 ## 14. 올바른 커밋 메시지 예시
 
 ```text
@@ -428,9 +545,16 @@ git config --local --unset core.hooksPath
 
 ## 17. 주의사항
 
-* `.gitmessage.txt`, `.githooks/commit-msg`, `scripts/setup-git.sh` 파일은 Git에 커밋해야 팀원들이 받을 수 있습니다.
+* `.gitmessage.txt`, `.githooks/commit-msg`, `scripts/setup-git.sh`, `scripts/setup-git.bat` 파일은 Git에 커밋해야 팀원들이 받을 수 있습니다.
 * `git config --local` 설정은 팀원 개인 로컬 저장소에만 적용됩니다.
-* 따라서 프로젝트를 clone 받은 팀원은 반드시 `./scripts/setup-git.sh`를 한 번 실행해야 합니다.
+* 따라서 프로젝트를 clone 받은 팀원은 반드시 본인 환경에 맞는 설정 스크립트를 한 번 실행해야 합니다.
+* Mac/Linux/Git Bash 사용자는 `./scripts/setup-git.sh` 또는 `sh scripts/setup-git.sh`를 실행합니다.
+* Windows CMD/PowerShell 사용자는 `.\scripts\setup-git.bat`을 실행합니다.
+* Windows에서 `./scripts/setup-git.sh`가 실행되지 않는 것은 정상적인 상황일 수 있습니다.
+* Git Bash를 사용하는 경우 Windows에서도 `sh scripts/setup-git.sh` 명령어를 사용할 수 있습니다.
+* `.sh` 파일 실행 시 `bad interpreter: /bin/sh^M` 오류가 발생하면 줄바꿈 방식이 CRLF로 되어 있을 가능성이 있습니다.
+* `.sh` 파일은 LF 줄바꿈을 사용하는 것이 좋습니다.
+* IntelliJ에서는 파일 우측 하단의 줄바꿈 설정을 `CRLF`에서 `LF`로 변경할 수 있습니다.
 * `commit-msg` hook은 로컬에서 커밋 메시지를 검사합니다.
 * GitHub PR 제목까지 강제하려면 별도의 GitHub Actions 설정이 필요합니다.
 * 급하게 커밋해야 할 경우 `--no-verify` 옵션으로 hook을 우회할 수 있지만, 팀 규칙상 사용하지 않는 것을 권장합니다.
@@ -443,12 +567,13 @@ git commit --no-verify
 
 ## 18. 최종 정리
 
-이번 프로젝트에서는 아래 3개 파일을 통해 커밋 컨벤션을 적용합니다.
+이번 프로젝트에서는 아래 4개 파일을 통해 커밋 컨벤션을 적용합니다.
 
 ```text
 .gitmessage.txt
 .githooks/commit-msg
 scripts/setup-git.sh
+scripts/setup-git.bat
 ```
 
 역할은 다음과 같습니다.
@@ -461,7 +586,20 @@ scripts/setup-git.sh
 → 커밋 메시지 형식 검사 및 오류 시 커밋 차단
 
 scripts/setup-git.sh
-→ 팀원이 한 번에 설정할 수 있도록 자동화
+→ Mac/Linux/Git Bash 환경에서 Git 설정 자동화
+
+scripts/setup-git.bat
+→ Windows CMD/PowerShell 환경에서 Git 설정 자동화
+```
+
+팀원은 프로젝트를 clone 받은 후 본인 환경에 맞는 스크립트를 한 번 실행합니다.
+
+```text
+Mac/Linux/Git Bash
+→ ./scripts/setup-git.sh
+
+Windows CMD/PowerShell
+→ .\scripts\setup-git.bat
 ```
 
 커밋 메시지는 아래 형식을 따릅니다.

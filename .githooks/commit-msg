@@ -1,0 +1,68 @@
+#!/bin/sh
+
+COMMIT_MSG_FILE="$1"
+
+# 주석과 빈 줄을 제외한 첫 번째 줄을 커밋 제목으로 사용
+TITLE=$(grep -vE '^[[:space:]]*#' "$COMMIT_MSG_FILE" | sed '/^[[:space:]]*$/d' | head -n 1)
+
+# 제목 비어있는지 검사
+if [ -z "$TITLE" ]; then
+  echo ""
+  echo "커밋 메시지를 입력해주세요."
+  echo ""
+  echo "사용 예시:"
+  echo "  Add: 지수 정보 생성 API 추가"
+  echo "  Fix: 지수 데이터 중복 저장 오류 수정"
+  echo "  Refactor: 동기화 서비스 로직 분리"
+  echo "  Docs: README 실행 방법 추가"
+  echo "  Rename: IndexInfoDto 파일명 변경"
+  echo ""
+  exit 1
+fi
+
+# 50자 이하 검사
+TITLE_LENGTH=$(printf "%s" "$TITLE" | wc -m | tr -d ' ')
+
+if [ "$TITLE_LENGTH" -gt 50 ]; then
+  echo ""
+  echo "커밋 제목은 50자 이하로 작성해주세요."
+  echo "현재 글자 수: $TITLE_LENGTH"
+  echo "현재 제목: $TITLE"
+  echo ""
+  echo "수정 예시:"
+  echo "  Add: 지수 정보 생성 API 추가"
+  echo "  Fix: 중복 저장 오류 수정"
+  echo ""
+  exit 1
+fi
+
+# 허용 타입 검사
+if ! echo "$TITLE" | grep -Eq '^(Add|Fix|Refactor|Docs|Rename): .+'; then
+  echo ""
+  echo "커밋 메시지 형식이 올바르지 않습니다."
+  echo ""
+  echo "사용 가능한 형식:"
+  echo "  Add: 새로운 파일 추가"
+  echo "  Fix: 코드 수정"
+  echo "  Refactor: 코드 리팩토링"
+  echo "  Docs: README와 같은 문서 수정"
+  echo "  Rename: 파일, 폴더명 수정 혹은 이동"
+  echo ""
+  echo "복사해서 사용할 수 있는 예시:"
+  echo "  Add: 지수 정보 생성 API 추가"
+  echo "  Add: 지수 데이터 조회 API 추가"
+  echo "  Add: 연동 이력 저장 기능 추가"
+  echo "  Fix: 지수 데이터 중복 저장 오류 수정"
+  echo "  Fix: 자동 연동 설정 수정 오류 해결"
+  echo "  Refactor: 외부 API 호출 로직 분리"
+  echo "  Refactor: 공통 예외 처리 구조 개선"
+  echo "  Docs: README 프로젝트 실행 방법 추가"
+  echo "  Rename: SyncHistory를 SyncJob으로 변경"
+  echo ""
+  echo "현재 입력된 커밋 메시지:"
+  echo "  $TITLE"
+  echo ""
+  exit 1
+fi
+
+exit 0

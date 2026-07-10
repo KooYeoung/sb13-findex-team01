@@ -1,7 +1,6 @@
 package com.sb13.findex.indexdata.entity;
 
-import com.sb13.findex.global.entity.BaseEntity;
-import com.sb13.findex.indexinfo.entity.IndexInfo;
+import com.sb13.findex.entity.IndexInfo; //일단 지수 정보 관리 있다고 가정
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,15 +15,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 @Table(
     name = "index_data",
@@ -36,7 +31,7 @@ import lombok.NoArgsConstructor;
     }
 )
 
-public class IndexData extends BaseEntity {
+public class IndexData {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;

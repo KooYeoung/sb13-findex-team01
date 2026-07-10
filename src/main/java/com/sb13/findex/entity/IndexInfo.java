@@ -1,7 +1,5 @@
-package com.sb13.findex.indexinfo.entity;
+package com.sb13.findex.entity;
 
-import com.sb13.findex.global.entity.BaseEntity;
-import com.sb13.findex.sync.entity.SourceType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +18,7 @@ import java.time.*;
                 )
         }
 )
-public class IndexInfo extends BaseEntity {
+public class IndexInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

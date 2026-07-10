@@ -1,4 +1,4 @@
-package com.sb13.findex.sync.entity;
+package com.sb13.findex.entity;
 
 public enum SourceType {
     USER,

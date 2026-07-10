@@ -1,6 +1,5 @@
-package com.sb13.findex.sync.entity;
+package com.sb13.findex.entity;
 
-import com.sb13.findex.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AutoSyncConfig extends BaseEntity {
+public class AutoSyncConfig {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

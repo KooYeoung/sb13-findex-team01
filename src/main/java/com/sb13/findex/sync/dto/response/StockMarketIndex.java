@@ -1,5 +1,8 @@
 package com.sb13.findex.sync.dto.response;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 /**
  * 주가지수시세 단일 항목입니다.
  *
@@ -111,4 +114,10 @@ public record StockMarketIndex(
         String yrWRcrdLwst,
         String yrWRcrdLwstDt
 ) {
+    private static final DateTimeFormatter BASIC_ISO_DATE_FORMATTER = DateTimeFormatter.BASIC_ISO_DATE;
+
+    public LocalDate parseBasDt() {
+        return LocalDate.parse(basDt, BASIC_ISO_DATE_FORMATTER);
+    }
+
 }

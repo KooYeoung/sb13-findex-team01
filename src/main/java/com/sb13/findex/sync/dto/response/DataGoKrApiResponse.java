@@ -60,9 +60,22 @@ public record DataGoKrApiResponse<T>(
     public String getResultCode() {
         if (response == null) throw new NullPointerException("response is null");
         if (response.header() == null) throw new NullPointerException("response.header is null");
-        if (response.header().resultCode() == null) throw new NullPointerException("response.header.resultCode is null");
+        if (response.header().resultCode() == null)
+            throw new NullPointerException("response.header.resultCode is null");
 
         return response.header().resultCode();
+    }
+
+    public Integer getNumOfRows() {
+        return response.body().numOfRows();
+    }
+
+    public Integer getPageNo() {
+        return response.body().pageNo();
+    }
+
+    public Integer getTotalPages() {
+        return response.body().totalCount() / response.body().numOfRows();
     }
 
 }

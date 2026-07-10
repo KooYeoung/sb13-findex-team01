@@ -67,6 +67,19 @@ public class IndexDataRepositoryImpl implements IndexDataRepositoryCustom {
         .fetch();
   }
 
+  @Override
+  public long count(IndexDataSearchCondition condition) {
+    QIndexData indexData = QIndexData.indexData;
+
+    Long count = queryFactory
+        .select(indexData.count())
+        .from(indexData)
+        .where(filterCondition(condition))
+        .fetchOne();
+
+    return count == null ? 0L : count;
+  }
+
   private BooleanBuilder filterCondition(IndexDataSearchCondition condition) {
     QIndexData indexData = QIndexData.indexData;
 

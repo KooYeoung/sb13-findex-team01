@@ -27,8 +27,14 @@ public enum IndexDataSortField {
     }
 
     public static IndexDataSortField from(String value) {
+        if (value == null || value.isBlank()) {
+            return BASE_DATE;
+        }
+
+        String normalizedValue = value.trim();
+
         return Arrays.stream(values())
-                .filter(field -> field.value.equals(value))
+                .filter(field -> field.value.equalsIgnoreCase(normalizedValue))
                 .findFirst()
                 .orElseThrow(() ->
                         new IllegalArgumentException("지원하지 않는 정렬 필드입니다: " + value));

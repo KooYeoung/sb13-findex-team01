@@ -10,10 +10,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/index-data")
 public class IndexDataController {
 
     private final IndexDataService indexDataService;
@@ -21,8 +23,7 @@ public class IndexDataController {
     public IndexDataController(IndexDataService indexDataService) {
         this.indexDataService = indexDataService;
     }
-
-    @GetMapping("/api/index-data")
+    @GetMapping
     public CursorPageResponse<IndexDataResponse> search(
             @RequestParam(required = false) Long indexInfoId,
 

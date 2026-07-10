@@ -41,10 +41,12 @@ public class IndexDataServiceImpl implements IndexDataService {
 
         List<IndexDataResponse> responses = IndexDataMapper.toResponseList(content);
 
+        long totalElements = indexDataRepository.count(condition);
+
         String nextCursor = null;
         Long nextIdAfter = null;
         //마지막 데이터를 기준으로 다음 페이지용 cursor를 만든다.
-        if (!content.isEmpty()) {
+        if (hasNext && !content.isEmpty()) {
             IndexData last = content.get(content.size() - 1);
             nextCursor = getCursorValue(last, condition.sortField());
             nextIdAfter = last.getId();
@@ -55,6 +57,7 @@ public class IndexDataServiceImpl implements IndexDataService {
                 nextCursor,
                 nextIdAfter,
                 responses.size(),
+                totalElements,
                 hasNext
         );
     }

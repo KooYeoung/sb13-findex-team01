@@ -12,5 +12,7 @@ public interface IndexDataRepositoryCustom {
     //다음 페이지가 있는지 확인
     List<IndexData> search(IndexDataSearchCondition condition);
 
+    long count(IndexDataSearchCondition condition);
+
     List<IndexData> searchForExport(IndexDataSearchCondition condition);
 }

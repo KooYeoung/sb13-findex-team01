@@ -1,5 +1,6 @@
 package com.sb13.findex.indexdata.entity;
 
+import com.sb13.findex.global.entity.BaseEntity;
 import com.sb13.findex.indexinfo.entity.IndexInfo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,7 +32,7 @@ import lombok.NoArgsConstructor;
     }
 )
 
-public class IndexData {
+public class IndexData extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;

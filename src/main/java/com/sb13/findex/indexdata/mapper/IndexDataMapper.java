@@ -28,6 +28,7 @@ public class IndexDataMapper {
                 indexData.getTradingPrice(),
                 indexData.getMarketTotalAmount()
         );
+
     }
 
     public static List<IndexDataResponse> toResponseList(List<IndexData> indexDataList) {

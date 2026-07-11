@@ -12,4 +12,5 @@ public interface IndexDataService {
     CursorPageResponse<IndexDataResponse> search(IndexDataSearchCondition condition);
     byte[] exportCsv(IndexDataSearchCondition condition);
 
+
 }

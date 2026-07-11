@@ -10,10 +10,7 @@ public record IndexDataCreateRequest(
 
     @NotNull(message = "기준 일자는 필수입니다.")
     LocalDate baseDate,
-
-    @NotNull(message = "소스 타입은 필수입니다.")
-    String sourceType,
-
+    
     @NotNull BigDecimal marketPrice,
     @NotNull BigDecimal closingPrice,
     @NotNull BigDecimal highPrice,

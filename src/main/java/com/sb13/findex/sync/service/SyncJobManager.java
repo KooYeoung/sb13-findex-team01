@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,8 @@ public class SyncJobManager {
     private final DataGoKrApiService dataGoKrApiService;
 
     private final IpAddressService ipAddressService;
+
+    private final Executor externalApiExecutor;
 
     public void syncIndexInfos() {
         DataGoKrApiResponse<StockMarketIndex> response = dataGoKrApiService.getStockMarketIndexList();

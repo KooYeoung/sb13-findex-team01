@@ -1,7 +1,7 @@
 package com.sb13.findex.sync.service;
 
 
-import com.sb13.findex.indexdata.service.IndexDataService;
+import com.sb13.findex.indexdata.dto.command.IndexDataOpenApiCommand;
 import com.sb13.findex.indexinfo.entity.IndexInfo;
 import com.sb13.findex.sync.dto.command.IndexDataSyncCommand;
 import com.sb13.findex.sync.dto.command.IndexInfoKey;
@@ -33,7 +33,7 @@ public class SyncJobManager {
 
     private final Executor externalApiExecutor;
 
-    private final IndexDataService indexDataService;
+    private final SyncJobService syncJobService;
 
     public void syncIndexInfos() {
         DataGoKrApiResponse<StockMarketIndex> response = dataGoKrApiService.getStockMarketIndexList();
@@ -52,11 +52,11 @@ public class SyncJobManager {
 
         Map<IndexInfoKey, StockMarketIndex> latestStockMarketIndices = getLatestStockMarketIndices(stockMarketIndexList);
         log.info("latestStockMarketIndices.size : {}", latestStockMarketIndices.size());
+
         /*
-         * TODO indexInfoService.saveAll
-         *  - indexInfo의 저장받을 Dto가 필요합니다.
-         *  - 메서드와 Dto가 정의된 이후 작업예정입니다.
-         */
+            latestStockMarketIndices.values().stream()
+                .map(smi -> )
+        */
 
 
         String worker = ipAddressService.getClientIp();
@@ -65,6 +65,7 @@ public class SyncJobManager {
          * TODO syncJobService.saveAll
          *  - syncJobService 가 공유되면 작업 예정입니다.
          */
+//        syncJobService.indexInfoSaveAll();
 
     }
 
@@ -80,46 +81,24 @@ public class SyncJobManager {
          */
         List<IndexInfo> indexInfos = new ArrayList<>();
 
-        /*
-         * TODO
-         *  2. indexInfo의 키 분류..
-         */
         Map<IndexInfoKey, IndexInfo> infoKeyIndexInfoMap = indexInfos.stream()
                 .collect(Collectors.toMap(this::createIndexInfoKey, Function.identity()));
 
-        /*
-         * TODO
-         *  3. indexData를 만들기 위한 StockMarketIndexApiRequest 생성
-         */
         List<StockMarketIndexApiRequest> apiRequests = infoKeyIndexInfoMap.keySet().stream()
                 .map(key -> StockMarketIndexApiRequest.ofExactIndexName(baseDateFrom, baseDateTo, key.indexName()))
                 .toList();
 
-        /*
-         * TODO
-         *  4. API 호출
-         */
         List<StockMarketIndex> filteredIndexes = apiRequests.stream()
                 .map(request -> fetchStockMarketIndexes(dataGoKrApiService.getStockMarketIndexList(request), request))
                 .flatMap(List::stream)
                 .filter(smi -> infoKeyIndexInfoMap.get(IndexInfoKey.from(smi)) != null)
                 .toList();
 
-        /*
-         * TODO
-         *  5. IndexData 저장
-         *  - indexDataService.saveOrUpdateOpenApiData  가 공유되면 작업 예정입니다.
-         */
-        filteredIndexes.forEach(smi -> {
-            indexDataService.saveOrUpdateOpenApiData(smi.toIndexDataCommand(infoKeyIndexInfoMap.get(IndexInfoKey.from(smi))));
-        });
+        List<IndexDataOpenApiCommand> dataOpenApiCommands = filteredIndexes.stream()
+                .map(smi -> smi.toIndexDataCommand(infoKeyIndexInfoMap.get(IndexInfoKey.from(smi))))
+                .toList();
 
-        /*
-         * TODO
-         *  6. SyncJob 저장
-         *  - syncJobService 가 공유되면 작업 예정입니다.
-         */
-
+        syncJobService.indexDataSaveAll(dataOpenApiCommands, worker);
 
     }
 

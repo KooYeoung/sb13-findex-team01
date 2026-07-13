@@ -2,6 +2,7 @@ package com.sb13.findex.sync.service;
 
 
 import com.sb13.findex.indexdata.dto.command.IndexDataOpenApiCommand;
+import com.sb13.findex.indexinfo.dto.command.IndexInfoCreateCommand;
 import com.sb13.findex.indexinfo.entity.IndexInfo;
 import com.sb13.findex.sync.dto.command.IndexDataSyncCommand;
 import com.sb13.findex.sync.dto.command.IndexInfoKey;
@@ -51,21 +52,14 @@ public class SyncJobManager {
         }
 
         Map<IndexInfoKey, StockMarketIndex> latestStockMarketIndices = getLatestStockMarketIndices(stockMarketIndexList);
-        log.info("latestStockMarketIndices.size : {}", latestStockMarketIndices.size());
 
-        /*
-            latestStockMarketIndices.values().stream()
-                .map(smi -> )
-        */
-
+        List<IndexInfoCreateCommand> infoCreateCommands = latestStockMarketIndices.values().stream()
+                .map(StockMarketIndex::toIndexInfoCommand)
+                .toList();
 
         String worker = ipAddressService.getClientIp();
-        List<IndexInfoKey> indexInfoKeys = latestStockMarketIndices.keySet().stream().toList();
-        /*
-         * TODO syncJobService.saveAll
-         *  - syncJobService 가 공유되면 작업 예정입니다.
-         */
-//        syncJobService.indexInfoSaveAll();
+
+        syncJobService.indexInfoSaveAll(worker, infoCreateCommands);
 
     }
 

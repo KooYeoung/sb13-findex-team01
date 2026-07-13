@@ -1,6 +1,7 @@
 package com.sb13.findex.sync.dto.response;
 
 import com.sb13.findex.indexdata.dto.command.IndexDataOpenApiCommand;
+import com.sb13.findex.indexinfo.dto.command.IndexInfoCreateCommand;
 import com.sb13.findex.indexinfo.entity.IndexInfo;
 import org.springframework.util.StringUtils;
 
@@ -137,7 +138,7 @@ public record StockMarketIndex(
 
     public Integer parseEpyItmsCnt() {
         if (!StringUtils.hasText(epyItmsCnt)) {
-            return null;
+            return 0;
         }
         return Integer.parseInt(epyItmsCnt);
     }
@@ -162,6 +163,17 @@ public record StockMarketIndex(
               parseLong(trqu),
               parseLong(trPrc),
               parseLong(lstgMrktTotAmt)
+        );
+    }
+
+    public IndexInfoCreateCommand toIndexInfoCommand(){
+        return new IndexInfoCreateCommand(
+                idxCsf,
+                idxNm,
+                parseEpyItmsCnt(),
+                parseBasPntm(),
+                parseBasIdx(),
+                false
         );
     }
 

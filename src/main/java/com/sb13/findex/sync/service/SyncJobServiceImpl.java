@@ -4,7 +4,10 @@ package com.sb13.findex.sync.service;
 import com.sb13.findex.indexdata.dto.command.IndexDataOpenApiCommand;
 import com.sb13.findex.indexdata.dto.response.CursorPageResponse;
 import com.sb13.findex.indexdata.service.IndexDataService;
+import com.sb13.findex.indexinfo.dto.command.IndexInfoCreateCommand;
+import com.sb13.findex.indexinfo.service.IndexInfoService;
 import com.sb13.findex.sync.dto.command.IndexDataKey;
+import com.sb13.findex.sync.dto.command.IndexInfoKey;
 import com.sb13.findex.sync.dto.request.SyncJobSearchCommand;
 import com.sb13.findex.sync.dto.request.SyncJobSortField;
 import com.sb13.findex.sync.dto.response.SyncJobDto;
@@ -30,6 +33,8 @@ public class SyncJobServiceImpl implements SyncJobService {
     private final SyncJobRepository syncJobRepository;
 
     private final IndexDataService indexDataService;
+
+    private final IndexInfoService indexInfoService;
 
     @Override
     public CursorPageResponse<SyncJobDto> search(SyncJobSearchCommand command) {
@@ -84,6 +89,24 @@ public class SyncJobServiceImpl implements SyncJobService {
 
         syncJobRepository.saveDataAll(worker, indexDataKeys);
 
+    }
+
+    @Override
+    public void indexInfoSaveAll(String worker, List<IndexInfoCreateCommand> infoCreateCommands) {
+
+        // TODO OPEN_API 저장로직 필요.
+        //  - indexInfoService.saveAll(infoCreateCommands)?
+
+        List<IndexInfoKey> indexInfoKeys = infoCreateCommands.stream()
+                .map(this::getIndexInfoKey)
+                .toList();
+
+        syncJobRepository.saveInfoAll(worker, indexInfoKeys);
+
+    }
+
+    private IndexInfoKey getIndexInfoKey(IndexInfoCreateCommand command) {
+        return new IndexInfoKey(command.indexClassification(), command.indexName());
     }
 
     private IndexDataKey createIndexDataKey(IndexDataOpenApiCommand command) {

@@ -1,5 +1,6 @@
 package com.sb13.findex.sync.dto.request;
 
+import lombok.With;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -112,7 +113,9 @@ import java.time.LocalDate;
  *                            <p>항목설명: 전년말대비 등락률이 검색값보다 작은 데이터를 검색</p>
  */
 public record StockMarketIndexApiRequest(
+      @With
       Integer numOfRows,
+      @With
       Integer pageNo,
       String resultType,
       String serviceKey,

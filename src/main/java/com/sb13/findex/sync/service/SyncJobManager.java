@@ -10,7 +10,6 @@ import com.sb13.findex.sync.dto.response.DataGoKrApiResponse;
 import com.sb13.findex.sync.dto.response.StockMarketIndex;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -44,7 +43,8 @@ public class SyncJobManager {
 
         // 복수 : 총 지수정보 데이터: 228건
         // 반복 호출 사용시 아래 로직을 사용예정.
-        // List<StockMarketIndex> stockMarketIndexList = fetchStockMarketIndexes(response);
+//        StockMarketIndexApiRequest request = StockMarketIndexApiRequest.ofPage(response.getPageNo(), response.getNumOfRows());
+//        List<StockMarketIndex> stockMarketIndexList = fetchStockMarketIndexes(response, request);
         if (stockMarketIndexList.isEmpty()) {
             log.warn("동기화할 주가지수 데이터가 없습니다.");
             return;
@@ -68,7 +68,7 @@ public class SyncJobManager {
 
     }
 
-    public void syncIndexDataList(IndexDataSyncCommand command, String worker){
+    public void syncIndexDataList(IndexDataSyncCommand command, String worker) {
         List<Integer> indexInfoIds = command.indexInfoIds();
         LocalDate baseDateFrom = command.baseDateFrom();
         LocalDate baseDateTo = command.baseDateTo();
@@ -84,26 +84,26 @@ public class SyncJobManager {
          * TODO
          *  2. indexInfo의 키 분류..
          */
-        Map<IndexInfoKey,IndexInfo> infoKeyIndexInfoMap = indexInfos.stream()
-              .collect(Collectors.toMap(this::createIndexInfoKey, Function.identity()));
+        Map<IndexInfoKey, IndexInfo> infoKeyIndexInfoMap = indexInfos.stream()
+                .collect(Collectors.toMap(this::createIndexInfoKey, Function.identity()));
 
         /*
          * TODO
          *  3. indexData를 만들기 위한 StockMarketIndexApiRequest 생성
          */
         List<StockMarketIndexApiRequest> apiRequests = infoKeyIndexInfoMap.keySet().stream()
-              .map(key -> StockMarketIndexApiRequest.ofExactIndexName(baseDateFrom, baseDateTo, key.indexName()))
-              .toList();
+                .map(key -> StockMarketIndexApiRequest.ofExactIndexName(baseDateFrom, baseDateTo, key.indexName()))
+                .toList();
 
         /*
          * TODO
          *  4. API 호출
          */
         List<StockMarketIndex> filteredIndexes = apiRequests.stream()
-              .map(request -> fetchStockMarketIndexes(dataGoKrApiService.getStockMarketIndexList(request)))
-              .flatMap(List::stream)
-              .filter(smi -> infoKeyIndexInfoMap.get(IndexInfoKey.from(smi)) != null)
-              .toList();
+                .map(request -> fetchStockMarketIndexes(dataGoKrApiService.getStockMarketIndexList(request), request))
+                .flatMap(List::stream)
+                .filter(smi -> infoKeyIndexInfoMap.get(IndexInfoKey.from(smi)) != null)
+                .toList();
 
         /*
          * TODO
@@ -123,11 +123,7 @@ public class SyncJobManager {
 
     }
 
-    private IndexInfoKey createIndexInfoKey(IndexInfo info) {
-        return new IndexInfoKey(info.getIndexClassification(), info.getIndexName());
-    }
-
-    public void syncIndexDataList(IndexDataSyncCommand command){
+    public void syncIndexDataList(IndexDataSyncCommand command) {
         syncIndexDataList(command, ipAddressService.getClientIp());
     }
 
@@ -166,7 +162,9 @@ public class SyncJobManager {
         return existDate.isAfter(incomingDate) ? exist : incoming;
     }
 
-    private List<StockMarketIndex> fetchStockMarketIndexes(DataGoKrApiResponse<StockMarketIndex> firstResponse) {
+    private List<StockMarketIndex> fetchStockMarketIndexes(
+            DataGoKrApiResponse<StockMarketIndex> firstResponse,
+            StockMarketIndexApiRequest originRequest) {
         Integer totalPages = firstResponse.getTotalPages();
         Integer pageNo = firstResponse.getPageNo();
         Integer numOfRows = firstResponse.getNumOfRows();
@@ -185,7 +183,12 @@ public class SyncJobManager {
         // 25만건 전부 호출시 1분 소요..
         // 비동기 멀티쓰레드 사용 고려 예정
         for (int currentPage = pageNo + 1; currentPage <= totalPages; currentPage++) {
-            DataGoKrApiResponse<StockMarketIndex> pageResponse = dataGoKrApiService.getStockMarketIndexList(StockMarketIndexApiRequest.ofPage(numOfRows, currentPage));
+
+            StockMarketIndexApiRequest pageRequest = originRequest
+                    .withPageNo(currentPage)
+                    .withNumOfRows(numOfRows);
+
+            DataGoKrApiResponse<StockMarketIndex> pageResponse = dataGoKrApiService.getStockMarketIndexList(pageRequest);
 
             if (isResponseError(pageResponse)) {
                 log.error(
@@ -200,6 +203,10 @@ public class SyncJobManager {
             lists.addAll(pageResponse.getItem());
         }
         return lists;
+    }
+
+    private IndexInfoKey createIndexInfoKey(IndexInfo info) {
+        return new IndexInfoKey(info.getIndexClassification(), info.getIndexName());
     }
 
 }

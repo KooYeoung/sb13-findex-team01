@@ -12,8 +12,6 @@ import com.sb13.findex.indexdata.repository.IndexDataRepository;
 import com.sb13.findex.indexinfo.entity.IndexInfo;
 import com.sb13.findex.indexinfo.repository.IndexInfoRepository;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,16 +39,16 @@ public class IndexDataServiceImpl implements IndexDataService {
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지수 정보입니다. ID: " + command.indexInfoId()));
 
         //기존 데이터가 유저인지 오픈 데이터인지 알 수 있도록
-        Optional<IndexData> exisingData =
+        Optional<IndexData> existingData =
                 indexDataRepository.findByIndexInfo_IdAndBaseDate(
                         command.indexInfoId(), command.baseDate());
 
         //기존 데이터가 있으면 타입에 따라 처리
-        if(exisingData.isPresent()){
+        if(existingData.isPresent()){
             //기존 데이터가 USER면 중복 생성이므로 에러
             //기존데이터가 OPEN_API면 사용자가 직접등록한 값으로 갱신
             //updateByUser()안에서 indexType이 User로 바뀜
-            IndexData indexData = exisingData.get();
+            IndexData indexData = existingData.get();
 
             if(indexData.isUserData()){
                 throw new IllegalArgumentException("해당 날짜의 지수 데이터가 이미 존재합니다.");

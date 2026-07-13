@@ -1,8 +1,8 @@
 package com.sb13.findex.sync.dto.request;
 
 public enum SyncJobSortField {
-    TARGET_DATE("s.targetDate"),
-    JOB_TIME("s.jobTime");
+    TARGET_DATE("targetDate"),
+    JOB_TIME("jobTime");
 
     private final String queryField;
 

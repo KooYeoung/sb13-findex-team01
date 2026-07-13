@@ -21,6 +21,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom{
 
+    private static final String ALIAS = "s";
+
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -129,7 +131,7 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom{
     }
 
     private String resolveSortField(String sortField){
-        return SyncJobSortField.from(sortField).getQueryField();
+        return ALIAS + "." + SyncJobSortField.from(sortField).getQueryField();
     }
 
     private Object convertCursorValue(String sortField, String cursor){

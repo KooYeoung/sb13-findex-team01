@@ -9,9 +9,7 @@ import java.util.List;
 public class SyncJobMapper {
 
     public static SyncJobDto toSyncJobDto(SyncJob syncJob) {
-        Long indexInfoId = syncJob.getIndexInfo() != null
-                ? syncJob.getIndexInfo().getId()
-                  : null;
+        Long indexInfoId = syncJob.getIndexInfo().getId();
 
         return new SyncJobDto(
                 syncJob.getId(),

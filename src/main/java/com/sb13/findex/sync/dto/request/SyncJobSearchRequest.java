@@ -49,7 +49,7 @@ public record SyncJobSearchRequest(
                worker,
                parseJobResult(result),
                sortField,
-               sortDirection,
+               SortDirection.from(sortDirection).name(),
                cursor,
                idAfter,
                size

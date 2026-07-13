@@ -27,7 +27,7 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom{
         StringBuilder jpql = new StringBuilder();
         Map<String,Object> params = new HashMap<>();
 
-        jpql.append("SELECT s FROM SyncJob s WHERE 1 = 1 ");
+        jpql.append("SELECT s FROM SyncJob s JOIN FETCH s.indexInfo WHERE 1 = 1 ");
 
         appendSearchConditions(jpql, params, command);
         appendCursorCondition(jpql, params, command);

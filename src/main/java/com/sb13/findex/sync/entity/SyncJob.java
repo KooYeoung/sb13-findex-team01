@@ -22,7 +22,7 @@ public class SyncJob extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "index_info_id")
+    @JoinColumn(name = "index_info_id", nullable = false)
     private IndexInfo indexInfo;
 
     @Enumerated(EnumType.STRING)

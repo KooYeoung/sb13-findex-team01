@@ -2,10 +2,8 @@ package com.sb13.findex.sync.controller;
 
 
 import com.sb13.findex.indexdata.dto.CursorPageResponse;
-import com.sb13.findex.sync.dto.request.SyncJobSearchCondition;
+import com.sb13.findex.sync.dto.request.SyncJobSearchRequest;
 import com.sb13.findex.sync.dto.response.SyncJobDto;
-import com.sb13.findex.sync.entity.JobResult;
-import com.sb13.findex.sync.entity.JobType;
 import com.sb13.findex.sync.service.SyncJobService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,18 +24,18 @@ public class SyncJobController {
 
     @GetMapping
     public CursorPageResponse<SyncJobDto> search(
-            @RequestParam(required = false) JobType jobType,
+            @RequestParam(required = false) String jobType,
             @RequestParam(required = false) Long indexInfoId,
             @RequestParam(required = false) LocalDate targetDate,
             @RequestParam(required = false) String worker,
-            @RequestParam(required = false) JobResult result,
+            @RequestParam(required = false) String result,
             @RequestParam(required = false) String sortField,
             @RequestParam(required = false, defaultValue = "asc") String sortDirection,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Long idAfter,
             @RequestParam(required = false) Integer size
             ){
-        SyncJobSearchCondition condition = new SyncJobSearchCondition(
+        SyncJobSearchRequest request = new SyncJobSearchRequest(
                 jobType,
                 indexInfoId,
                 targetDate,
@@ -49,6 +47,6 @@ public class SyncJobController {
                 idAfter,
                 size
         );
-        return syncJobService.search(condition);
+        return syncJobService.search(request.toCommand());
     }
 }

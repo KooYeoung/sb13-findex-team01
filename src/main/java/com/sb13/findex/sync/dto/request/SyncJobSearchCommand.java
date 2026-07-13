@@ -5,7 +5,7 @@ import com.sb13.findex.sync.entity.JobType;
 
 import java.time.LocalDate;
 
-public record SyncJobSearchCondition(
+public record SyncJobSearchCommand(
         JobType jobType,
         Long indexInfoId,
         LocalDate targetDate,

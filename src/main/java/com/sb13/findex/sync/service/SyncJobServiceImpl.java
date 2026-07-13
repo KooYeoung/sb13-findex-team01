@@ -2,7 +2,7 @@ package com.sb13.findex.sync.service;
 
 
 import com.sb13.findex.indexdata.dto.CursorPageResponse;
-import com.sb13.findex.sync.dto.request.SyncJobSearchCondition;
+import com.sb13.findex.sync.dto.request.SyncJobSearchCommand;
 import com.sb13.findex.sync.dto.request.SyncJobSortField;
 import com.sb13.findex.sync.dto.response.SyncJobDto;
 import com.sb13.findex.sync.entity.SyncJob;
@@ -27,11 +27,11 @@ public class SyncJobServiceImpl implements SyncJobService {
     }
 
     @Override
-    public CursorPageResponse<SyncJobDto> search(SyncJobSearchCondition condition) {
-        int size = getSize(condition.size());
+    public CursorPageResponse<SyncJobDto> search(SyncJobSearchCommand command) {
+        int size = getSize(command.size());
 
         // Repository에서 size보다 1개 더 조회해온다 (다음 페이지 존재 여부 판단용)
-        List<SyncJob> found = syncJobRepository.search(condition);
+        List<SyncJob> found = syncJobRepository.search(command);
 
         // 요청한 size보다 많이 왔으면 다음 페이지가 있다는 뜻
         boolean hasNext = found.size() > size;
@@ -45,7 +45,7 @@ public class SyncJobServiceImpl implements SyncJobService {
         List<SyncJobDto> responses = SyncJobMapper.toResponseList(content);
 
         // 필터 조건 기준 전체 데이터 개수
-        long totalElements = syncJobRepository.count(condition);
+        long totalElements = syncJobRepository.count(command);
 
         String nextCursor = null;
         Long nextIdAfter = null;
@@ -53,7 +53,7 @@ public class SyncJobServiceImpl implements SyncJobService {
         // 다음 페이지가 있으면, 이번 페이지 마지막 데이터를 기준으로 다음 cursor 값을 만든다
         if (hasNext && !content.isEmpty()) {
             SyncJob last = content.get(content.size() - 1);
-            nextCursor = getCursorValue(last, condition.sortField());
+            nextCursor = getCursorValue(last, command.sortField());
             nextIdAfter = last.getId();
         }
 

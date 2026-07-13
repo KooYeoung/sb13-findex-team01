@@ -1,7 +1,7 @@
 package com.sb13.findex.sync.repository;
 
 
-import com.sb13.findex.sync.dto.request.SyncJobSearchCondition;
+import com.sb13.findex.sync.dto.request.SyncJobSearchCommand;
 import com.sb13.findex.sync.entity.SyncJob;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -23,25 +23,25 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom{
     private final EntityManager entityManager;
 
     @Override
-    public List<SyncJob> search(SyncJobSearchCondition condition) {
+    public List<SyncJob> search(SyncJobSearchCommand command) {
         StringBuilder jpql = new StringBuilder();
         Map<String,Object> params = new HashMap<>();
 
         jpql.append("SELECT s FROM SyncJob s WHERE 1 = 1 ");
 
-        appendSearchConditions(jpql, params, condition);
-        appendCursorCondition(jpql, params, condition);
+        appendSearchConditions(jpql, params, command);
+        appendCursorCondition(jpql, params, command);
 
         jpql.append(" ORDER BY ");
-        jpql.append(resolveSortField(condition.sortField()));
-        jpql.append(isDesc(condition.sortDirection()) ? " DESC" : " ASC");
+        jpql.append(resolveSortField(command.sortField()));
+        jpql.append(isDesc(command.sortDirection()) ? " DESC" : " ASC");
         jpql.append(", s.id ");
-        jpql.append(isDesc(condition.sortDirection()) ? "DESC" : "ASC");
+        jpql.append(isDesc(command.sortDirection()) ? "DESC" : "ASC");
 
         TypedQuery<SyncJob> query = entityManager.createQuery(jpql.toString(), SyncJob.class);
         params.forEach(query::setParameter);
 
-        int size = condition.size() == null || condition.size() <= 0 ? 10 : condition.size();
+        int size = command.size() == null || command.size() <= 0 ? 10 : command.size();
         query.setMaxResults(size + 1);
 
         return query.getResultList();
@@ -50,13 +50,13 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom{
 
 
     @Override
-    public long count(SyncJobSearchCondition condition) {
+    public long count(SyncJobSearchCommand command) {
         StringBuilder jpql = new StringBuilder();
         Map<String,Object> params = new HashMap<>();
 
         jpql.append("SELECT COUNT(s) FROM SyncJob s WHERE 1 = 1 ");
 
-        appendSearchConditions(jpql, params, condition);
+        appendSearchConditions(jpql, params, command);
 
         TypedQuery<Long> query = entityManager.createQuery(jpql.toString(), Long.class);
         params.forEach(query::setParameter);
@@ -67,46 +67,46 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom{
     private void appendSearchConditions(
             StringBuilder jpql,
             Map<String, Object> params,
-            SyncJobSearchCondition condition
+            SyncJobSearchCommand command
     ){
-        if (condition.jobType() != null) {
+        if (command.jobType() != null) {
             jpql.append("AND s.jobType = :jobType ");
-            params.put("jobType", condition.jobType());
+            params.put("jobType", command.jobType());
         }
 
-        if (condition.indexInfoId() != null) {
+        if (command.indexInfoId() != null) {
             jpql.append("AND s.indexInfo.id = :indexInfoId ");
-            params.put("indexInfoId", condition.indexInfoId());
+            params.put("indexInfoId", command.indexInfoId());
         }
 
-        if (condition.targetDate() != null) {
+        if (command.targetDate() != null) {
             jpql.append("AND s.targetDate = :targetDate ");
-            params.put("targetDate", condition.targetDate());
+            params.put("targetDate", command.targetDate());
         }
 
-        if (condition.worker() != null && !condition.worker().isEmpty()) {
+        if (command.worker() != null && !command.worker().isEmpty()) {
             jpql.append("AND s.worker = :worker ");
-            params.put("worker", condition.worker());
+            params.put("worker", command.worker());
         }
 
-        if (condition.result() != null) {
+        if (command.result() != null) {
             jpql.append("AND s.result = :result ");
-            params.put("result", condition.result());
+            params.put("result", command.result());
         }
     }
 
     private void appendCursorCondition(
             StringBuilder jpql,
             Map<String, Object> params,
-            SyncJobSearchCondition condition
+            SyncJobSearchCommand command
     ){
-        if (!condition.hasCursor()){
+        if (!command.hasCursor()){
             return;
         }
 
-        String sortField = resolveSortField(condition.sortField());
+        String sortField = resolveSortField(command.sortField());
 
-        if (isDesc(condition.sortDirection())) {
+        if (isDesc(command.sortDirection())) {
             jpql.append(" AND (");
             jpql.append(sortField).append(" < :cursor ");
             jpql.append(" OR (");
@@ -122,8 +122,8 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom{
             jpql.append(")) ");
         }
 
-        params.put("cursor", convertCursorValue(condition.sortField(), condition.cursor()));
-        params.put("idAfter", condition.idAfter());
+        params.put("cursor", convertCursorValue(command.sortField(), command.cursor()));
+        params.put("idAfter", command.idAfter());
     }
 
     private String resolveSortField(String sortField){

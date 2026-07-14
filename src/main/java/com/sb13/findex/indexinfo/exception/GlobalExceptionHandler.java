@@ -2,30 +2,15 @@ package com.sb13.findex.indexinfo.exception;
 
 import java.time.Instant;
 
-import com.sb13.findex.indexinfo.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException exception
-    ) {
-        String details = extractDetails(exception);
-
-        return createErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "잘못된 요청입니다.",
-                details
-        );
-    }
 
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleBindException(
@@ -39,6 +24,28 @@ public class GlobalExceptionHandler {
                 details
         );
     }
+
+    @ExceptionHandler(IndexInfoNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleIndexInfoNotFound(
+            IndexInfoNotFoundException exception
+    ) {
+        return createErrorResponse(
+                HttpStatus.NOT_FOUND,
+                "지수 정보를 찾을 수 없습니다.",
+                exception.getMessage()
+        );
+    }
+    @ExceptionHandler(DuplicateIndexInfoException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateIndexInfo(
+            DuplicateIndexInfoException exception
+    ) {
+        return createErrorResponse(
+                HttpStatus.CONFLICT,
+                "지수 정보 등록에 실패했습니다.",
+                exception.getMessage()
+        );
+    }
+
 
     private String extractDetails(BindException exception) {
         return exception.getBindingResult()
@@ -65,4 +72,6 @@ public class GlobalExceptionHandler {
                 .status(status)
                 .body(response);
     }
+
+
 }

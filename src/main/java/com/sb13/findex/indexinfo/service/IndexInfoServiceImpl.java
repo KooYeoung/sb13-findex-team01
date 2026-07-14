@@ -7,6 +7,7 @@ import com.sb13.findex.indexinfo.mapper.*;
 import com.sb13.findex.indexinfo.repository.*;
 import com.sb13.findex.indexinfo.utli.*;
 import com.sb13.findex.sync.entity.*;
+import com.sb13.findex.sync.service.*;
 import lombok.*;
 import org.springframework.stereotype.*;
 import org.springframework.transaction.annotation.*;
@@ -18,6 +19,7 @@ import java.util.*;
 public class IndexInfoServiceImpl implements IndexInfoService {
 
     private final IndexInfoRepository indexInfoRepository;
+    private final AutoSyncConfigService autoSyncConfigService;
 
     @Override
     public CursorPageResponse<IndexInfoResponse> search(IndexInfoSearchCondition condition) {
@@ -80,6 +82,12 @@ public class IndexInfoServiceImpl implements IndexInfoService {
         );
 
         IndexInfo savedIndexInfo = indexInfoRepository.save(indexInfo);
+        autoSyncConfigService.create(
+                new AutoSyncConfigCommand(
+                        savedIndexInfo,
+                        false
+                )
+        );
 
         return IndexInfoMapper.toResponse(savedIndexInfo);
     }
@@ -116,6 +124,9 @@ public class IndexInfoServiceImpl implements IndexInfoService {
                 .orElseThrow(()-> new IllegalArgumentException(
                         "존재하지 않는 지수 정보입니다. ID: " + id));
 
+        // TODO IndexData 삭제 메서드 추가 후 연결
+        // indexDataService.deleteAllByIndexInfoId(id);
+
         indexInfoRepository.delete(indexInfo);
     }
 
@@ -133,4 +144,5 @@ public class IndexInfoServiceImpl implements IndexInfoService {
             case EMPLOYED_ITEMS_COUNT -> String.valueOf(indexInfo.getEmployedItemsCount());
         };
     }
+
 }

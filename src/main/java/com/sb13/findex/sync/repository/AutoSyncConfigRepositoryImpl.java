@@ -4,19 +4,17 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sb13.findex.indexinfo.entity.QIndexInfo;
 import com.sb13.findex.sync.dto.condition.AutoSyncConfigSearchCondition;
 import com.sb13.findex.sync.dto.condition.AutoSyncConfigSortField;
 import com.sb13.findex.sync.entity.AutoSyncConfig;
-import com.sb13.findex.sync.entity.QAutoSyncConfig;
 import org.springframework.stereotype.Repository;
+import com.sb13.findex.indexinfo.entity.QIndexInfo;
+import com.sb13.findex.sync.entity.QAutoSyncConfig;
 
 import java.util.List;
 
 @Repository
 public class AutoSyncConfigRepositoryImpl implements AutoSyncConfigRepositoryCustom {
-
-    private static final int DEFAULT_SIZE = 10;
 
     private final JPAQueryFactory queryFactory;
 
@@ -29,9 +27,7 @@ public class AutoSyncConfigRepositoryImpl implements AutoSyncConfigRepositoryCus
         QAutoSyncConfig autoSyncConfig = QAutoSyncConfig.autoSyncConfig;
         QIndexInfo indexInfo = QIndexInfo.indexInfo;
 
-        int size = condition.size() == null || condition.size() <= 0
-                ? DEFAULT_SIZE
-                : condition.size();
+        int size = condition.resolvedSize();
 
         return queryFactory
                 .selectFrom(autoSyncConfig)
@@ -82,7 +78,7 @@ public class AutoSyncConfigRepositoryImpl implements AutoSyncConfigRepositoryCus
             return null;
         }
 
-        AutoSyncConfigSortField sortField = getSortField(condition.sortField());
+        AutoSyncConfigSortField sortField = AutoSyncConfigSortField.from(condition.sortField());
         boolean ascending = isAscending(condition.sortDirection());
 
         return switch (sortField) {
@@ -112,8 +108,8 @@ public class AutoSyncConfigRepositoryImpl implements AutoSyncConfigRepositoryCus
         return builder;
     }
 
-    // enabled는 true/false 두 값뿐이라 "다음 값"이 아예 없을 수 있음
-    // -> 같은 값 구간에서는 id로 비교하고, 값이 바뀌는 경계에서는 방향에 맞는 값을 통째로 포함
+    // enabled는 true/false뿐이라 다음 값이 아예 없을 수 있음
+    // 같은 값 구간에서는 id로 비교하고, 값이 바뀌는 경계에서는 방향에 맞는 값을 통째로 포함
     private BooleanBuilder compareEnabledCursor(Boolean cursor, Long idAfter, boolean ascending) {
         QAutoSyncConfig autoSyncConfig = QAutoSyncConfig.autoSyncConfig;
 
@@ -141,7 +137,7 @@ public class AutoSyncConfigRepositoryImpl implements AutoSyncConfigRepositoryCus
     }
 
     private OrderSpecifier<?> sortOrder(AutoSyncConfigSearchCondition condition) {
-        AutoSyncConfigSortField sortField = getSortField(condition.sortField());
+        AutoSyncConfigSortField sortField = AutoSyncConfigSortField.from(condition.sortField());
         Order order = isAscending(condition.sortDirection()) ? Order.ASC : Order.DESC;
 
         return switch (sortField) {
@@ -153,13 +149,6 @@ public class AutoSyncConfigRepositoryImpl implements AutoSyncConfigRepositoryCus
     private OrderSpecifier<Long> idOrder(AutoSyncConfigSearchCondition condition) {
         Order order = isAscending(condition.sortDirection()) ? Order.ASC : Order.DESC;
         return new OrderSpecifier<>(order, QAutoSyncConfig.autoSyncConfig.id);
-    }
-
-    private AutoSyncConfigSortField getSortField(String sortField) {
-        if (sortField == null || sortField.isBlank()) {
-            return AutoSyncConfigSortField.INDEX_INFO_ID;
-        }
-        return AutoSyncConfigSortField.from(sortField);
     }
 
     private boolean isAscending(String sortDirection) {

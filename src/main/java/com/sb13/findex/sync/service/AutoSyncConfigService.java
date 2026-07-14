@@ -5,7 +5,6 @@ import com.sb13.findex.indexinfo.entity.IndexInfo;
 import com.sb13.findex.indexinfo.repository.IndexInfoRepository;
 import com.sb13.findex.sync.dto.condition.AutoSyncConfigSearchCondition;
 import com.sb13.findex.sync.dto.condition.AutoSyncConfigSortField;
-import com.sb13.findex.sync.dto.request.AutoSyncConfigCreateRequest;
 import com.sb13.findex.sync.dto.response.AutoSyncConfigDto;
 import com.sb13.findex.sync.entity.AutoSyncConfig;
 import com.sb13.findex.sync.exception.AutoSyncConfigNotFoundException;
@@ -22,18 +21,10 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class AutoSyncConfigService {
 
-    private static final int DEFAULT_SIZE = 10;
-
     private final AutoSyncConfigRepository autoSyncConfigRepository;
+    // 지수 등록 로직과 연동할 때 쓰일 수 있음
     private final IndexInfoRepository indexInfoRepository;
 
-    // API Controller에서 들어오는 진입점 — indexInfoId를 실제 엔티티로 변환한 뒤 기존 로직
-    @Transactional
-    public AutoSyncConfigDto create(AutoSyncConfigCreateRequest request) {
-        IndexInfo indexInfo = indexInfoRepository.findById(request.indexInfoId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지수입니다. indexInfoId=" + request.indexInfoId()));
-        return create(new AutoSyncConfigCommand(indexInfo, request.enabled()));
-    }
 
     // 내부 또는 타 도메인 연동용
     @Transactional
@@ -62,7 +53,7 @@ public class AutoSyncConfigService {
     public CursorPageResponse<AutoSyncConfigDto> getList(AutoSyncConfigSearchCondition condition) {
         List<AutoSyncConfig> result = autoSyncConfigRepository.search(condition);
 
-        int size = condition.size() == null || condition.size() <= 0 ? DEFAULT_SIZE : condition.size();
+        int size = condition.resolvedSize();
         boolean hasNext = result.size() > size;
         List<AutoSyncConfig> content = hasNext ? result.subList(0, size) : result;
 
@@ -74,9 +65,7 @@ public class AutoSyncConfigService {
         Long nextIdAfter = null;
         if (hasNext && !content.isEmpty()) {
             AutoSyncConfig last = content.get(content.size() - 1);
-            AutoSyncConfigSortField sortField = condition.sortField() == null || condition.sortField().isBlank()
-                    ? AutoSyncConfigSortField.INDEX_INFO_ID
-                    : AutoSyncConfigSortField.from(condition.sortField());
+            AutoSyncConfigSortField sortField = AutoSyncConfigSortField.from(condition.sortField());
             nextCursor = switch (sortField) {
                 case INDEX_INFO_ID -> String.valueOf(last.getIndexInfo().getId());
                 case ENABLED -> String.valueOf(last.isEnabled());

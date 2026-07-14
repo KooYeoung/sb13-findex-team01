@@ -1,5 +1,7 @@
 package com.sb13.findex.sync.dto.condition;
 
+import com.sb13.findex.sync.exception.InvalidSortFieldException;
+
 import java.util.Arrays;
 
 public enum AutoSyncConfigSortField {
@@ -24,6 +26,6 @@ public enum AutoSyncConfigSortField {
         return Arrays.stream(values())
                 .filter(field -> field.value.equalsIgnoreCase(normalized))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 정렬 필드입니다: " + value));
+                .orElseThrow(() -> new InvalidSortFieldException(value));
     }
 }

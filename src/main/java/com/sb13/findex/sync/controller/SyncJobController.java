@@ -7,6 +7,7 @@ import com.sb13.findex.sync.dto.request.SyncJobSearchRequest;
 import com.sb13.findex.sync.dto.response.SyncJobDto;
 import com.sb13.findex.sync.service.SyncJobManager;
 import com.sb13.findex.sync.service.SyncJobService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,7 +61,7 @@ public class SyncJobController {
     }
 
     @PostMapping("/index-data")
-    public ResponseEntity<List<SyncJobDto>> syncIndexData(@RequestBody IndexDataSyncRequest request){
+    public ResponseEntity<List<SyncJobDto>> syncIndexData(@Valid @RequestBody IndexDataSyncRequest request){
         List<SyncJobDto> syncJobDtos = syncJobManager.syncIndexDataList(request.toCommand());
         HttpStatus status = syncJobDtos.isEmpty() ? HttpStatus.OK : HttpStatus.CREATED;
         return ResponseEntity.status(status).body(syncJobDtos);

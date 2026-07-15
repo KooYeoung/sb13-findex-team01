@@ -5,6 +5,7 @@ import com.sb13.findex.indexinfo.exception.ErrorResponse;
 import com.sb13.findex.indexinfo.exception.IndexInfoNotFoundException;
 import java.time.Instant;
 
+import java.util.Locale;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -94,8 +95,8 @@ public class GlobalExceptionHandler {
     ) {
         String specificMessage = exception.getMostSpecificCause().getMessage();
 
-        if (specificMessage != null && (specificMessage.toLowerCase().contains("duplicate") ||
-            specificMessage.toLowerCase().contains("unique"))) {
+        if (specificMessage != null && (specificMessage.toLowerCase(Locale.ROOT).contains("duplicate") ||
+            specificMessage.toLowerCase(Locale.ROOT).contains("unique"))) {
             return createErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 "데이터 충돌이 발생했습니다.",
@@ -103,7 +104,22 @@ public class GlobalExceptionHandler {
             );
         }
 
-        throw exception;
+        return createErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "데이터베이스 오류가 발생했습니다.",
+            "데이터 처리 중 문제가 발생했습니다."
+        );
+    }
+
+    @ExceptionHandler(DuplicateIndexDataException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateIndexDataException(
+        DuplicateIndexDataException exception
+    ) {
+        return createErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            "데이터 충돌이 발생했습니다.",
+            exception.getMessage()
+        );
     }
 
 }

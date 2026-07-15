@@ -1,5 +1,6 @@
 package com.sb13.findex.indexdata.service;
 
+import com.sb13.findex.global.exception.DuplicateIndexDataException;
 import com.sb13.findex.global.exception.IndexDataNotFoundException;
 import com.sb13.findex.indexdata.dto.command.IndexDataOpenApiCommand;
 import com.sb13.findex.indexdata.dto.command.IndexDataUpdateCommand;
@@ -18,11 +19,9 @@ import com.sb13.findex.indexinfo.repository.IndexInfoRepository;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional(readOnly = true)
@@ -50,8 +49,7 @@ public class IndexDataServiceImpl implements IndexDataService {
                 command.indexInfoId(),
                 command.baseDate()
         )) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "해당 날짜의 지수 데이터가 이미 존재합니다.");
+            throw new DuplicateIndexDataException();
         }
 
         IndexData indexData = IndexData.createUserData(indexInfo, command);

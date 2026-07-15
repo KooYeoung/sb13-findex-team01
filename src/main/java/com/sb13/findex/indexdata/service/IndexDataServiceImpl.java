@@ -16,9 +16,11 @@ import com.sb13.findex.indexinfo.repository.IndexInfoRepository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,7 +40,8 @@ public class IndexDataServiceImpl implements IndexDataService {
     @Transactional
     public IndexDataResponse createIndexData(IndexDataCreateCommand command) {
         IndexInfo indexInfo = indexInfoRepository.findById(command.indexInfoId())
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지수 정보입니다. ID: " + command.indexInfoId()));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "참조하는 지수 정보를 찾을 수 없습니다. ID: " + command.indexInfoId()));
 
         // 기존 데이터가 있으면 생성 요청은 실패 처리
 
@@ -46,7 +49,8 @@ public class IndexDataServiceImpl implements IndexDataService {
                 command.indexInfoId(),
                 command.baseDate()
         )) {
-            throw new IllegalArgumentException("해당 날짜의 지수 데이터가 이미 존재합니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "해당 날짜의 지수 데이터가 이미 존재합니다.");
         }
 
         IndexData indexData = IndexData.createUserData(indexInfo, command);
@@ -59,7 +63,8 @@ public class IndexDataServiceImpl implements IndexDataService {
     @Transactional
     public IndexDataResponse updateIndexData(Long id, IndexDataUpdateCommand command) {
         IndexData indexData = indexDataRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지수 데이터입니다. ID: " + id));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "수정할 지수 데이터를 찾을 수 없습니다. ID: " + id));
 
         indexData.updateByUser(
             command.marketPrice(),
@@ -80,7 +85,8 @@ public class IndexDataServiceImpl implements IndexDataService {
     @Transactional
     public void deleteIndexData(Long id) {
         IndexData indexData = indexDataRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지수 데이터입니다. ID: " + id));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "삭제할 지수 데이터를 찾을 수 없습니다. ID: " + id));
 
         indexDataRepository.delete(indexData);
     }

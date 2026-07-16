@@ -12,7 +12,7 @@ import java.util.List;
 public record IndexDataSyncRequest(
         @NotEmpty(message = "지수 정보 ID는 하나 이상 입력해야 합니다.")
         List<@NotNull(message = "지수 정보 ID는 필수입니다.")
-                @Positive(message = "지수 정보 ID는 양수여야 합니다.") Long> indexInfoIds,
+        @Positive(message = "지수 정보 ID는 양수여야 합니다.") Long> indexInfoIds,
         @NotNull(message = "시작일은 필수입니다.")
         LocalDate baseDateFrom,
         @NotNull(message = "종료일은 필수입니다.")
@@ -28,8 +28,9 @@ public record IndexDataSyncRequest(
         return !baseDateFrom.isAfter(baseDateTo);
     }
 
-    public IndexDataSyncCommand toCommand() {
-
-        return new IndexDataSyncCommand(indexInfoIds, baseDateFrom, baseDateTo);
+    public List<IndexDataSyncCommand> toCreateSyncCommands() {
+        return indexInfoIds.stream().map(
+                indexInfoId -> new IndexDataSyncCommand(indexInfoId, baseDateFrom, baseDateTo)
+        ).toList();
     }
 }

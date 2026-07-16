@@ -52,6 +52,10 @@ public class AutoSyncScheduler {
         }
 
         List<IndexDataSyncCommand> commands = targets.stream()
+                .filter(target -> {
+                               LocalDate latestBaseDate = target.getLatestBaseDate();
+                              return latestBaseDate == null || latestBaseDate.isBefore(today);
+                })
                 .map(target -> createSyncCommand(target, today))
                 .toList();
 

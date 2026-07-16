@@ -12,6 +12,7 @@ import com.sb13.findex.indexinfo.entity.QIndexInfo;
 import com.sb13.findex.indexdata.dto.condition.IndexDataSearchCondition;
 import com.sb13.findex.indexdata.dto.condition.IndexDataSortField;
 import com.sb13.findex.indexdata.entity.IndexData;
+import com.sb13.findex.indexdata.entity.IndexType;
 import com.sb13.findex.indexdata.entity.QIndexData;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -145,15 +146,39 @@ public class IndexDataRepositoryImpl implements IndexDataRepositoryCustom {
     boolean ascending = isAscending(condition.sortDirection());
 
     return switch (sortField) {
+      case ID -> compareCursor(
+          QIndexData.indexData.id,
+          Long.valueOf(condition.cursor()),
+          condition.idAfter(),
+          ascending
+      );
       case INDEX_INFO_ID -> compareCursor(
           QIndexData.indexData.indexInfo.id,
           Long.valueOf(condition.cursor()),
           condition.idAfter(),
           ascending
       );
+      case INDEX_CLASSIFICATION -> compareCursor(
+          QIndexData.indexData.indexInfo.indexClassification,
+          condition.cursor(),
+          condition.idAfter(),
+          ascending
+      );
+      case INDEX_NAME -> compareCursor(
+          QIndexData.indexData.indexInfo.indexName,
+          condition.cursor(),
+          condition.idAfter(),
+          ascending
+      );
       case BASE_DATE -> compareCursor(
           QIndexData.indexData.baseDate,
           LocalDate.parse(condition.cursor()),
+          condition.idAfter(),
+          ascending
+      );
+      case SOURCE_TYPE -> compareCursor(
+          QIndexData.indexData.indexType,
+          IndexType.valueOf(condition.cursor().trim().toUpperCase()),
           condition.idAfter(),
           ascending
       );
@@ -273,8 +298,12 @@ public class IndexDataRepositoryImpl implements IndexDataRepositoryCustom {
     Order order = isAscending(condition.sortDirection()) ? Order.ASC : Order.DESC;
 
     return switch (sortField) {
+      case ID -> new OrderSpecifier<>(order, QIndexData.indexData.id);
       case INDEX_INFO_ID -> new OrderSpecifier<>(order, QIndexData.indexData.indexInfo.id);
+      case INDEX_CLASSIFICATION -> new OrderSpecifier<>(order, QIndexData.indexData.indexInfo.indexClassification);
+      case INDEX_NAME -> new OrderSpecifier<>(order, QIndexData.indexData.indexInfo.indexName);
       case BASE_DATE -> new OrderSpecifier<>(order, QIndexData.indexData.baseDate);
+      case SOURCE_TYPE -> new OrderSpecifier<>(order, QIndexData.indexData.indexType);
       case MARKET_PRICE -> new OrderSpecifier<>(order, QIndexData.indexData.marketPrice);
       case CLOSING_PRICE -> new OrderSpecifier<>(order, QIndexData.indexData.closingPrice);
       case HIGH_PRICE -> new OrderSpecifier<>(order, QIndexData.indexData.highPrice);

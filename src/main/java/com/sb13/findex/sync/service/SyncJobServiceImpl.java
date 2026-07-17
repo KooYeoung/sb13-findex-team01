@@ -15,6 +15,7 @@ import com.sb13.findex.sync.entity.SyncJob;
 import com.sb13.findex.sync.mapper.SyncJobMapper;
 import com.sb13.findex.sync.repository.SyncJobRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ import java.util.UUID;
 @Service
 @Transactional(readOnly = true) // 조회 전용이라 읽기 전용 트랜잭션으로 설정 했습니다.
 @RequiredArgsConstructor
+@Slf4j
 public class SyncJobServiceImpl implements SyncJobService {
 
     // size 파라미터가 없을 때 기본 페이지 크기
@@ -80,7 +82,8 @@ public class SyncJobServiceImpl implements SyncJobService {
 
     @Transactional
     @Override
-    public List<SyncJobDto> indexDataSaveAll(List<IndexDataOpenApiCommand> dataOpenApiCommands, String worker) {
+    public void indexDataSaveAll(List<IndexDataOpenApiCommand> dataOpenApiCommands, String worker, UUID uuid ) {
+        log.info("indexDataSaveAll called with {} commands", dataOpenApiCommands.size());
 
         dataOpenApiCommands.forEach(indexDataService::saveOrUpdateOpenApiData);
 
@@ -88,21 +91,14 @@ public class SyncJobServiceImpl implements SyncJobService {
                 .map(this::createIndexDataKey)
                 .toList();
 
-        UUID uuid = UUID.randomUUID();
-
         syncJobRepository.saveDataAll(worker, indexDataSyncJobTargets, uuid);
-
-        List<SyncJob> foundSyncJobs = syncJobRepository.findBySyncExecutionId(uuid);
-
-        return foundSyncJobs.stream()
-                .map(SyncJobMapper::toSyncJobDto)
-                .toList();
 
     }
 
     @Transactional
     @Override
     public List<SyncJobDto> indexInfoSaveAll(List<IndexInfoCreateCommand> infoCreateCommands, String worker) {
+        log.info("indexInfoSaveAll called with {} commands", infoCreateCommands.size());
 
         infoCreateCommands.forEach(indexInfoService::saveOrUpdateOpenApiInfo);
 
@@ -121,6 +117,12 @@ public class SyncJobServiceImpl implements SyncJobService {
                 .toList();
     }
 
+    @Override
+    public List<SyncJobDto> foundSyncJobs(UUID uuid) {
+        return syncJobRepository.findBySyncExecutionId(uuid).stream()
+                .map(SyncJobMapper::toSyncJobDto)
+                .toList();
+    }
 
 
     private IndexInfoKey getIndexInfoKey(IndexInfoCreateCommand command) {

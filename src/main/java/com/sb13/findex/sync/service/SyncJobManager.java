@@ -78,13 +78,34 @@ public class SyncJobManager {
 
     }
 
-    public List<SyncJobDto> syncIndexDataList(List<IndexDataSyncCommand> commands, String worker) {
+    public List<SyncJobDto> syncIndexDataList(
+            List<IndexDataSyncCommand> commands,
+            String worker
+    ) {
+        boolean isSystemWorker = "system".equals(worker);
+        Optional<UUID> uuid = executeSync(commands, worker);
+
+        if (isSystemWorker) {
+            // 대량의 데이터가 있을경우 오류가 발생하는 것.. 같음..
+            // 좀더 테스트 필요.
+            return List.of();
+        }
+
+        return uuid
+                .map(syncJobService::foundSyncJobs)
+                .orElseGet(List::of);
+    }
+
+    private Optional<UUID> executeSync(
+            List<IndexDataSyncCommand> commands,
+            String worker
+    ) {
         List<Long> indexInfoIds = commands.stream().map(IndexDataSyncCommand::indexInfoId).toList();
 
         List<IndexInfo> indexInfos = indexInfoReader.findIndexInfosByIds(indexInfoIds);
         if (indexInfos.isEmpty()) {
             log.warn("동기화할 지수정보가 없습니다.");
-            return List.of();
+            return Optional.empty();
         }
 
         Map<Long, IndexDataSyncCommand> indexDataSyncMap = commands.stream()
@@ -92,27 +113,9 @@ public class SyncJobManager {
 
         List<StockIndexFetchTarget> fetchTargets = createFetchTargets(indexInfos, indexDataSyncMap);
 
-        List<FetchOutcome> fetchOutcomes = fetchInBatches(fetchTargets);
-
-        List<IndexDataOpenApiCommand> openApiCommands = fetchOutcomes.stream()
-                .filter(fo -> {
-                    if (fo.isSuccess()) {
-                        return true;
-                    }
-                    log.error(
-                            "지수 데이터 외부 API 조회 실패. indexInfoId={}, key={}",
-                            fo.target().indexInfo().getId(),
-                            fo.target().key(),
-                            fo.error()
-                    );
-                    return false;
-                })
-                .map(fo -> createIndexDataCommands(fo.target(), fo.items()))
-                .flatMap(Collection::stream)
-                .toList();
-
-        return syncJobService.indexDataSaveAll(openApiCommands, worker);
-
+        UUID uuid = UUID.randomUUID();
+        fetchInBatches(fetchTargets,worker, uuid);
+        return Optional.of(uuid);
     }
 
     public List<SyncJobDto> syncIndexDataList(List<IndexDataSyncCommand> commands) {
@@ -134,8 +137,7 @@ public class SyncJobManager {
 
         int fetchBatchSize = resolveFetchBatchSize();
 
-        List<StockMarketIndex> result =
-                new ArrayList<>(firstResponse.getItem());
+        Map<IndexInfoKey, StockMarketIndex> latestStockMarketIndices = getLatestStockMarketIndices(firstResponse.getItem());
 
         for (int fromPage = pageNo + 1; fromPage <= totalPages; fromPage += fetchBatchSize) {
 
@@ -175,11 +177,19 @@ public class SyncJobManager {
                         return outcome.isSuccess();
                     })
                     .flatMap(outcome -> outcome.items.stream())
-                    .forEach(result::add);
+                    .forEach(current->{
+                        IndexInfoKey infoKey = new IndexInfoKey(current.idxCsf(), current.idxNm());
+
+                        latestStockMarketIndices.merge(
+                                infoKey,
+                                current,
+                                this::selectLatest
+                        );
+                    });
 
         }
 
-        return List.copyOf(result);
+        return List.copyOf(latestStockMarketIndices.values());
     }
 
     private CompletableFuture<PageFetchOutcome> fetchPageAsync(int pageNo, StockMarketIndexApiRequest request) {
@@ -367,10 +377,9 @@ public class SyncJobManager {
     /**
      * 전체 대상을 최대 50건씩 나누어 실행합니다.
      */
-    private List<FetchOutcome> fetchInBatches(List<StockIndexFetchTarget> targets) {
+    private void fetchInBatches(List<StockIndexFetchTarget> targets, String worker,  UUID uuid) {
         int fetchBatchSize = resolveFetchBatchSize();
 
-        List<FetchOutcome> results = new ArrayList<>();
 
         for (int fromIndex = 0; fromIndex <= targets.size(); fromIndex += fetchBatchSize) {
 
@@ -378,10 +387,25 @@ public class SyncJobManager {
 
             List<StockIndexFetchTarget> batch = targets.subList(fromIndex, toIndex);
 
-            results.addAll(fetchBatch(batch));
-        }
+            List<IndexDataOpenApiCommand> openApiCommands = fetchBatch(batch).stream()
+                    .filter(fo -> {
+                        if (fo.isSuccess()) {
+                            return true;
+                        }
+                        log.error(
+                                "지수 데이터 외부 API 조회 실패. indexInfoId={}, key={}",
+                                fo.target().indexInfo().getId(),
+                                fo.target().key(),
+                                fo.error()
+                        );
+                        return false;
+                    })
+                    .map(fo -> createIndexDataCommands(fo.target(), fo.items()))
+                    .flatMap(Collection::stream)
+                    .toList();
 
-        return List.copyOf(results);
+            syncJobService.indexDataSaveAll(openApiCommands, worker, uuid);
+        }
     }
 
     private int resolveFetchBatchSize() {

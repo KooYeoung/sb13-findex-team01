@@ -7,10 +7,12 @@ import com.sb13.findex.sync.service.SyncJobManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,8 +25,13 @@ public class AutoSyncScheduler {
 
     private final AutoSyncConfigService autoSyncConfigService;
     private final SyncJobManager syncJobManager;
+    @Value("${findex.batch.auto-sync.zone:Asia/Seoul}")
+    private String autoSyncZone;
 
-    @Scheduled(cron = "${findex.batch.auto-sync.cron}")
+    @Scheduled(
+            cron = "${findex.batch.auto-sync.cron}",
+            zone = "${findex.batch.auto-sync.zone:Asia/Seoul}"
+    )
     public void syncEnabledIndexData() {
         List<AutoSyncTargetProjection> targets = autoSyncConfigService.getEnabledTargetsWithLatestBaseDate();
 
@@ -33,7 +40,7 @@ public class AutoSyncScheduler {
             return;
         }
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of(autoSyncZone));
 
         LocalDate oldestLatestBaseDate = getOldestLatestBaseDate(targets);
 
@@ -51,8 +58,8 @@ public class AutoSyncScheduler {
 
         List<IndexDataSyncCommand> commands = targets.stream()
                 .filter(target -> {
-                               LocalDate latestBaseDate = target.getLatestBaseDate();
-                              return latestBaseDate == null || latestBaseDate.isBefore(today);
+                    LocalDate latestBaseDate = target.getLatestBaseDate();
+                    return latestBaseDate == null || latestBaseDate.isBefore(today);
                 })
                 .map(target -> createSyncCommand(target, today))
                 .toList();
